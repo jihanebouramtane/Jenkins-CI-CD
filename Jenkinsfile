@@ -3,9 +3,6 @@ pipeline {
 
     environment {
         VENV_DIR = "venv"
-        HOST = "0.0.0.0"
-        PORT = "5000"
-        APP_MODULE = "app:app"
     }
 
     stages {
@@ -37,11 +34,11 @@ pipeline {
             }
         }
 
-        stage('Deploy (Windows Compatible)') {
+        stage('Deploy (Windows)') {
             steps {
                 bat """
                 call %VENV_DIR%\\Scripts\\activate.bat
-                echo Starting Flask app...
+                echo Starting Flask app on Windows...
                 python app.py
                 """
             }
