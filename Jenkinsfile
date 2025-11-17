@@ -17,7 +17,7 @@ pipeline {
             steps {
                 echo '📥 Cloning the repository...'
                 git branch: 'main', 
-                    url: 'https://github.com/jihanebouramtane2002@gmail.com/Jenkins-CI-CD', 
+                    url: 'https://github.com/jihanebouramtane/Jenkins-CI-CD', 
                     credentialsId: 'Github-token'
             }
         }
