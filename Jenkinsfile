@@ -2,99 +2,69 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = credentials('github-token')
-        VENV_DIR = ".venv"
-        HOST = "0.0.0.0"
+        VENV_DIR = "venv"
+        HOST = "127.0.0.1"
         PORT = "5000"
-        APP_MODULE = "app:app"  
     }
 
     stages {
-        stage('Checkout') {
+
+        /* --- 1) CHECKOUT AUTOMATIQUE PAR JENKINS --- */
+        stage('Checkout Code') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/jihanebouramtane/Jenkins-CI-CD.git',
-                    credentialsId: 'github-token'
+                    url: 'https://github.com/jihanebouramtane/Jenkins-CI-CD.git'
             }
         }
 
+        /* --- 2) CREA ENV PYTHON --- */
         stage('Setup Virtual Environment') {
             steps {
                 bat """
-                python -m venv ${VENV_DIR}
-                call ${VENV_DIR}\\Scripts\\activate
-                python -m pip install --upgrade pip
+                python -m venv %VENV_DIR%
+                call %VENV_DIR%\\Scripts\\activate.bat
+                pip install --upgrade pip
                 pip install -r requirements.txt
                 """
             }
         }
 
+        /* --- 3) TESTS UNITAIRES --- */
         stage('Run Tests') {
-            when {
-                not {
-                    changeset "README.md"
-                }
-            }
-            parallel {
-                stage('Test File 1') {
-                    steps {
-                        bat """
-                        call ${VENV_DIR}\\Scripts\\activate
-                        python -m pytest test_app.py -v
-                        """
-                    }
-                }
-                stage('Test File 2') {
-                    steps {
-                        bat """
-                        call ${VENV_DIR}\\Scripts\\activate
-                        python -m pytest test_app_2.py -v
-                        """
-                    }
-                }
+            steps {
+                bat """
+                call %VENV_DIR%\\Scripts\\activate.bat
+                pytest -v
+                """
             }
         }
 
-        stage('Deploy (Local with Gunicorn)') {
+        /* --- 4) DEPLOIEMENT SUR WINDOWS AVEC FLASK --- */
+        stage('Deploy (Windows)') {
             steps {
-                echo 'Starting Flask app locally using Gunicorn...'
                 bat """
-                call ${VENV_DIR}\\Scripts\\activate
-                start /B gunicorn --bind ${HOST}:${PORT} ${APP_MODULE} > gunicorn.log 2>&1
-                echo ✅ Gunicorn started on http://${HOST}:${PORT}
+                call %VENV_DIR%\\Scripts\\activate.bat
+                echo Starting Flask server...
+                start /B python app.py
                 """
             }
         }
     }
 
+    /* --- NOTIFICATIONS EMAIL --- */
     post {
         success {
             emailext(
-                to: "EMAIL_TO_PLACEHOLDER",
-                from: "EMAIL_FROM_PLACEHOLDER",
-                replyTo: "EMAIL_REPLY_PLACEHOLDER",
-                subject: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                mimeType: 'text/html',
-                body: """\
-                <p>Good news!</p>
-                <p>Build <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> succeeded.</p>
-                <p>Check details: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                """
+                to: "EMAIL_TO",
+                subject: "SUCCESS: Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "The job ran successfully. Check details at ${env.BUILD_URL}"
             )
         }
-
         failure {
             emailext(
-                to: "EMAIL_TO_PLACEHOLDER",
-                from: "EMAIL_FROM_PLACEHOLDER",
-                replyTo: "EMAIL_REPLY_PLACEHOLDER",
-                subject: "❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                mimeType: 'text/html',
-                body: """\
-                <p>Uh oh...</p>
-                <p>Build <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> failed.</p>
-                <p>Check logs: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                """
+                to: "EMAIL_TO",
+                subject: "FAILURE: Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "The job failed. See logs at ${env.BUILD_URL}"
             )
         }
     }
