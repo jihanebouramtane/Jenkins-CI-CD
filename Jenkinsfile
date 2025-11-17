@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/jihanebouramtane/Jenkins-CI-CD.git',
+                    url: 'https://github.com/jihanebouramtane/REPO.git',
                     credentialsId: 'github-token'
             }
         }
