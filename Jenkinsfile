@@ -2,70 +2,74 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = "venv"
-        HOST = "127.0.0.1"
-        PORT = "5000"
+        // Charge le token GitHub stocké dans Jenkins
+        GITHUB_TOKEN = credentials('Github-token')
+    }
+     triggers {
+        // Déclenche le pipeline à chaque push sur le repo
+        // Ceci fonctionne avec le webhook GitHub configuré dans Jenkins
+        githubPush()
     }
 
     stages {
 
-        /* --- 1) CHECKOUT AUTOMATIQUE PAR JENKINS --- */
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/jihanebouramtane/Jenkins-CI-CD.git'
+                echo '📥 Cloning the repository...'
+                git branch: 'main', 
+                    url: 'https://github.com/jihanebouramtane2002@gmail.com/Jenkins-CI-CD', 
+                    credentialsId: 'Github-token'
             }
         }
 
-        /* --- 2) CREA ENV PYTHON --- */
-        stage('Setup Virtual Environment') {
+        stage('Setup Python Virtual Environment') {
             steps {
+                echo '⚙️ Setting up Python virtual environment...'
                 bat """
-                python -m venv %VENV_DIR%
-                call %VENV_DIR%\\Scripts\\activate.bat
-                pip install --upgrade pip
-                pip install -r requirements.txt
+                    python -m venv venv
+                    call venv\\Scripts\\activate
+                    python -m pip install --upgrade pip
+                    python -m pip install -r requirements.txt
+                    python --version
                 """
             }
         }
 
-        /* --- 3) TESTS UNITAIRES --- */
         stage('Run Tests') {
-            steps {
-                bat """
-                call %VENV_DIR%\\Scripts\\activate.bat
-                pytest -v
-                """
+            when {
+                not {
+                    changeset "**/README.md"
+                }
             }
-        }
-
-        /* --- 4) DEPLOIEMENT SUR WINDOWS AVEC FLASK --- */
-        stage('Deploy (Windows)') {
-            steps {
-                bat """
-                call %VENV_DIR%\\Scripts\\activate.bat
-                echo Starting Flask server...
-                start /B python app.py
-                """
+            parallel {
+                stage('Test App 1') {
+                    steps {
+                        echo '🧪 Running test_app.py...'
+                        bat """
+                            call venv\\Scripts\\activate
+                            pytest test_app.py --maxfail=1 --disable-warnings -q
+                        """
+                    }
+                }
+                stage('Test App 2') {
+                    steps {
+                        echo '🧪 Running test_app_2.py...'
+                        bat """
+                            call venv\\Scripts\\activate
+                            pytest test_app_2.py --maxfail=1 --disable-warnings -q
+                        """
+                    }
+                }
             }
         }
     }
 
-    /* --- NOTIFICATIONS EMAIL --- */
     post {
         success {
-            emailext(
-                to: "jihanebouramtane2002@gmail.com",
-                subject: "SUCCESS: Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "The job ran successfully. Check details at ${env.BUILD_URL}"
-            )
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
-            emailext(
-                to: "jihanebouramtane2002@gmail.com",
-                subject: "FAILURE: Job ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "The job failed. See logs at ${env.BUILD_URL}"
-            )
+            echo '❌ Pipeline failed!'
         }
     }
 }
