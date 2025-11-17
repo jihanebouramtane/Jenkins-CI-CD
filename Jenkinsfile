@@ -48,7 +48,7 @@ pipeline {
                         """
                     }
                 }
-                         stage('Test File 2') {
+                stage('Test File 2') {
                     steps {
                         bat """
                         call ${VENV_DIR}\\Scripts\\activate
