@@ -63,8 +63,8 @@ pipeline {
     post {
         success {
             emailext(
-                to: "EMAIL_TO_PLACEHOLDER",
-                from: "EMAIL_FROM_PLACEHOLDER",
+                to: "jihanebouramtane2002@gmail.com",
+                from: "jihanebouramtane2002@gmail.Com",
                 replyTo: "EMAIL_REPLY_PLACEHOLDER",
                 subject: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 mimeType: 'text/html',
