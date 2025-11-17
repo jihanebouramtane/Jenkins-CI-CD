@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/TON_COMPTE/Jenkins-CI-CD.git'
+                    url: 'https://github.com/jihanebouramtane/Jenkins-CI-CD.git'
             }
         }
 
@@ -41,9 +41,10 @@ pipeline {
             steps {
                 bat """
                 call %VENV_DIR%\\Scripts\\activate.bat
-                gunicorn --bind %HOST%:%PORT%  %APP_MODULE% --pid gunicorn.pid --log-level debug
+                gunicorn --bind %HOST%:%PORT% %APP_MODULE%
                 """
             }
         }
-    }
-}
+
+    } // ← FERMETURE DE stages
+}     // ← FERMETURE DE pipeline
