@@ -48,6 +48,14 @@ pipeline {
                         """
                     }
                 }
+                         stage('Test File 2') {
+                    steps {
+                        bat """
+                        call ${VENV_DIR}\\Scripts\\activate
+                        python -m pytest test_app2.py -v
+                        """
+                    }
+                }
                 
             }
         }
