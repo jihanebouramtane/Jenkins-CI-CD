@@ -8,6 +8,10 @@ pipeline {
         PORT = "5000"
         APP_MODULE = "app:app"  
     }
+    triggers {
+       cron('H/5 * * * *') // exécution toutes les 5 minutes
+    }
+
 
     stages {
         stage('Checkout') {
