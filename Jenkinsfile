@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        VENV_DIR = "venv"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -17,9 +13,8 @@ pipeline {
         stage('Setup Virtual Environment') {
             steps {
                 bat """
-                python -m venv %VENV_DIR%
-                call %VENV_DIR%\\Scripts\\activate.bat
-                python -m pip install --upgrade pip
+                python -m venv venv
+                call venv\\Scripts\\activate.bat
                 pip install -r requirements.txt
                 """
             }
@@ -28,8 +23,8 @@ pipeline {
         stage('Run Tests') {
             steps {
                 bat """
-                call %VENV_DIR%\\Scripts\\activate.bat
-                pytest test_app.py -v
+                call venv\\Scripts\\activate.bat
+                pytest
                 """
             }
         }
@@ -37,11 +32,12 @@ pipeline {
         stage('Deploy (Windows)') {
             steps {
                 bat """
-                call %VENV_DIR%\\Scripts\\activate.bat
-                echo Starting Flask app on Windows...
-                python app.py
+                call venv\\Scripts\\activate.bat
+                echo Starting Flask app in background...
+                start /B python app.py
                 """
             }
         }
+
     }
 }
