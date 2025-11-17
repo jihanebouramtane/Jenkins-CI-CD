@@ -22,7 +22,7 @@ pipeline {
                 bat """
                 python -m venv %VENV_DIR%
                 call %VENV_DIR%\\Scripts\\activate.bat
-                pip install --upgrade pip
+                python -m pip install --upgrade pip
                 pip install -r requirements.txt
                 """
             }
@@ -37,11 +37,12 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy (Windows Compatible)') {
             steps {
                 bat """
                 call %VENV_DIR%\\Scripts\\activate.bat
-                gunicorn --bind %HOST%:%PORT%  %APP_MODULE% --pid gunicorn.pid --log-level debug
+                echo Starting Flask app...
+                python app.py
                 """
             }
         }
